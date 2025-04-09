@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def load_datasets():
     companies = pd.read_csv('data/companies.csv')
     industries = pd.read_csv('data/company_industries.csv')
@@ -10,6 +11,7 @@ def load_datasets():
     merged_data = merged_data.merge(specialities, on='company_id', how='left')
 
     return merged_data
+
 
 def load_ground_truth():
     import json
