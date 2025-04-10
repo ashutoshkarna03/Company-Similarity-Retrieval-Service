@@ -19,6 +19,7 @@ This project implements a Python-based service to retrieve and rank companies si
 5. **Modular Codebase**:
    - Repository pattern for database queries.
    - Separate routers for API endpoints.
+   - Pydantic Models
 6. **Continuous Integration**:
    - Automated testing using GitHub Actions.
 
@@ -73,7 +74,7 @@ docker-compose up --build
 Run the script to load data and generate embeddings:
 ```
 
-python load_data_to_postgres.py
+python app/load_data_to_postgres.py
 
 ```
 
@@ -114,6 +115,7 @@ curl http://localhost:8000/api/retrieve_similar_companies/1009
 project/
 ├── app/
 │   ├── main.py              \# Entry point for FastAPI application
+|   ├── load_data_to_postgres.py \# Script for loading data into PostgreSQL
 |   ├── models/
 |   |   ├── company.py       \# Pydantic Models 
 |   |   └── __init__.py
@@ -130,7 +132,6 @@ project/
 │   ├── company_industries.csv \# Industry mapping
 │   ├── company_specialities.csv \# Specialities mapping
 ├── tests/                   \# Unit tests for repositories and routers
-├── load_data_to_postgres.py \# Script for loading data into PostgreSQL
 ├── requirements.txt         \# Python dependencies
 ├── docker-compose.yml       \# Docker Compose setup for services (PostgreSQL + Redis + FastAPI)
 ├── .github/workflows/tests.yml \# GitHub Actions workflow for CI/CD testing pipeline
@@ -167,19 +168,26 @@ pytest tests/ --maxfail=5 --disable-warnings -v
 ```
 
 {
-"company_id": <target_company_id>,
-"similar_companies": [
-{
-"id": <similar_company_id>,
-"similarity": <similarity_score>
-},
-...
-]
+   "company_id": <target_company_id>,
+   "similar_companies": [
+      {
+      "id": <similar_company_id>,
+      "similarity": <similarity_score>
+      },
+   ...
+   ]
 }
 
 ```
 
 ---
+
+## **OpenAPI Docs**
+
+OpenAPI docs can be accessed at:
+http://localhost:8000/docs
+
+
 
 ## **GitHub Actions Workflow**
 
@@ -193,12 +201,24 @@ The CI pipeline runs tests automatically using GitHub Actions.
 
 ### API Response Example
 ![API Success Screenshot](screenshots/api_success.png)
----
-![API Failure Screenshot](screenshots/api_failure.png)
+
 ---
 
-### Project Structure
-![Google Cloud Setup](screenshots/gcloud.png)
+![API Failure Screenshot](screenshots/api_failure.png)
+
+---
+
+### Postgres Data
+![Posgres Data Schema](screenshots/postgres.png)
+
+---
+
+### OpenAPI Docs
+![OpenAPI Docs 1](screenshots/openapi_1.png)
+
+---
+
+![OpenAPI Docs 2](screenshots/openapi_2.png)
 
 ---
 
@@ -210,7 +230,7 @@ The CI pipeline runs tests automatically using GitHub Actions.
 5. Env variables management
 6. Logger implementation
 7. Security measurements
-8. IaaC for Google cloud, for ex: terraform
+8. IaaC for Google Cloud or AWS using, for ex: terraform
 
 ---
 

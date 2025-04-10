@@ -1,0 +1,158 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "FastAPI",
+      "version": "0.1.0"
+    },
+    "paths": {
+      "/api/retrieve_similar_companies/{company_id}": {
+        "get": {
+          "tags": [
+            "Company APIs"
+          ],
+          "summary": "Retrieve Similar Companies",
+          "operationId": "retrieve_similar_companies_api_retrieve_similar_companies__company_id__get",
+          "parameters": [
+            {
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "title": "Company Id"
+              },
+              "name": "company_id",
+              "in": "path"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SimilarCompaniesResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/": {
+        "get": {
+          "summary": "Root",
+          "operationId": "root__get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "SimilarCompaniesResponse": {
+          "properties": {
+            "company_id": {
+              "type": "integer",
+              "title": "Company Id"
+            },
+            "similar_companies": {
+              "items": {
+                "$ref": "#/components/schemas/SimilarCompany"
+              },
+              "type": "array",
+              "title": "Similar Companies"
+            }
+          },
+          "type": "object",
+          "required": [
+            "company_id",
+            "similar_companies"
+          ],
+          "title": "SimilarCompaniesResponse"
+        },
+        "SimilarCompany": {
+          "properties": {
+            "id": {
+              "type": "integer",
+              "title": "Id"
+            },
+            "similarity": {
+              "type": "number",
+              "title": "Similarity"
+            }
+          },
+          "type": "object",
+          "required": [
+            "id",
+            "similarity"
+          ],
+          "title": "SimilarCompany"
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+  }
