@@ -1,45 +1,29 @@
+# app/main.py
+import os
 from fastapi import FastAPI, HTTPException
-from sqlalchemy import text
-from app.database import SessionLocal
-from app.models.company import SimilarCompany, SimilarCompaniesResponse
+from fastapi_redis_cache import FastApiRedisCache, cache
 
+from app.routers.company import router as company_router
 
 app = FastAPI()
 
 
-@app.get("/retrieve_similar_companies/{company_id}", response_model=SimilarCompaniesResponse)
-def retrieve_similar_companies(company_id: int):
-    db = SessionLocal()
-    try:
-        # Get target embedding
-        target = db.execute(text("""
-            SELECT embedding FROM companies 
-            WHERE company_id = :company_id
-        """), {"company_id": company_id}).fetchone()
-        
-        if not target:
-            raise HTTPException(status_code=404, detail="Company ID not found")
-        
-        # Find similar companies using pgvector
-        results = db.execute(text("""
-            SELECT company_id, 
-                   1 - (embedding <=> :target_embedding) as similarity
-            FROM companies
-            WHERE company_id != :company_id
-            ORDER BY similarity DESC
-            LIMIT 5
-        """), {
-            "target_embedding": target[0],
-            "company_id": company_id
-        }).fetchall()
+# Initialize Redis cache during startup
+@app.on_event("startup")
+def startup():
+    redis_cache = FastApiRedisCache()
+    redis_cache.init(
+        host_url=os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"),
+        prefix="company-similarity-cache",
+        response_header="X-Cache",
+        ignore_arg_types=[]
+    )
 
-        # Construct response using Pydantic model
-        return SimilarCompaniesResponse(
-            company_id=company_id,
-            similar_companies=[
-                SimilarCompany(id=r[0], similarity=float(r[1]))
-                for r in results
-            ]
-        )
-    finally:
-        db.close()  # Ensure the session is closed
+
+# Include the router for company-related APIs
+app.include_router(company_router, prefix="/api", tags=["Company APIs"])
+
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Company Similarity API"}
