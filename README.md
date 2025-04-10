@@ -1,4 +1,3 @@
-
 # **Company Similarity Retrieval Service**
 
 ## **Overview**
@@ -15,10 +14,13 @@ This project implements a Python-based service to retrieve and rank companies si
    - Store embeddings in PostgreSQL with pgvector extension.
 3. **Similarity Computation**:
    - Perform similarity search directly in PostgreSQL using the `&lt;=&gt;` operator for cosine similarity.
-4. **API Development**:
-   - Expose an API endpoint `/retrieve_similar_companies/{company_id}` to return the top similar companies.
-5. **Progress Tracking**:
-   - Log progress during data loading and embedding generation.
+4. **Redis Caching**:
+   - Cache API responses to improve performance and reduce database load.
+5. **Modular Codebase**:
+   - Repository pattern for database queries.
+   - Separate routers for API endpoints.
+6. **Continuous Integration**:
+   - Automated testing using GitHub Actions.
 
 ---
 
@@ -29,9 +31,13 @@ This project implements a Python-based service to retrieve and rank companies si
   - `sqlalchemy`: Database interaction
   - `sentence-transformers`: Embedding generation
   - `psycopg2-binary`: PostgreSQL driver
-  - `tqdm`: Progress tracking
+  - `fastapi-redis-cache`: Redis caching
+  - `pytest`: Testing framework
+  - `sqlalchemy-utils`: Database utilities
 - **Database**: PostgreSQL with pgvector extension
+- **Caching**: Redis
 - **Containerization**: Docker
+- **CI/CD**: GitHub Actions
 
 ---
 
@@ -56,7 +62,7 @@ pip install -r requirements.txt
 ```
 
 ### **3. Start Services**
-Run the following command to start PostgreSQL and the FastAPI application:
+Run the following command to start PostgreSQL, Redis, and the FastAPI application:
 ```
 
 docker-compose up --build
@@ -73,18 +79,18 @@ python load_data_to_postgres.py
 
 ### **5. Access the API**
 Use tools like Postman or CURL to interact with the API:
-- Endpoint: `/retrieve_similar_companies/{company_id}`
+- Endpoint: `/api/retrieve_similar_companies/{company_id}`
 - Example Request:
 ```
 
-curl http://localhost:8000/retrieve_similar_companies/1415
+curl http://localhost:8000/api/retrieve_similar_companies/1009
 
 ```
 - Example Response:
 ```
 
 {
-"company_id": 1415,
+"company_id": 1009,
 "similar_companies": [
 {"id": 1016, "similarity": 0.89},
 {"id": 1023, "similarity": 0.87},
@@ -96,31 +102,63 @@ curl http://localhost:8000/retrieve_similar_companies/1415
 
 ---
 
+### Architecture Diagram
+![API Response Screenshot](screenshots/architecture.png)
+
+
+---
+
 ## **Directory Structure**
 ```
 
 project/
 ├── app/
-│   ├── main.py          \# FastAPI implementation
-│   ├── database.py      \# Database connection setup (PostgreSQL)
-│   └── __init__.py
+│   ├── main.py              \# Entry point for FastAPI application
+|   ├── models/
+|   |   ├── company.py       \# Pydantic Models 
+|   |   └── __init__.py
+│   ├── routers/
+│   │   ├── company.py       \# Router file for company-related APIs
+│   │   └── __init__.py      \# Makes `routers` a Python package
+│   ├── repositories/
+│   │   ├── company.py       \# Repository file for company-related database queries
+│   │   └── __init__.py      \# Makes `repositories` a Python package
+│   ├── database.py          \# Database connection setup
+│   └── __init__.py          \# Makes `app` a Python package
 ├── data/
-│   ├── companies.csv    \# Company data
+│   ├── companies.csv        \# Company data
 │   ├── company_industries.csv \# Industry mapping
 │   ├── company_specialities.csv \# Specialities mapping
+├── tests/                   \# Unit tests for repositories and routers
 ├── load_data_to_postgres.py \# Script for loading data into PostgreSQL
-├── requirements.txt     \# Python dependencies
-├── Dockerfile           \# Docker configuration for FastAPI app
-├── docker-compose.yml   \# Docker Compose setup for services (PostgreSQL + FastAPI)
-└── README.md            \# Project documentation (this file)
+├── requirements.txt         \# Python dependencies
+├── docker-compose.yml       \# Docker Compose setup for services (PostgreSQL + Redis + FastAPI)
+├── .github/workflows/tests.yml \# GitHub Actions workflow for CI/CD testing pipeline
+└── README.md                \# Project documentation (this file)
 
 ```
 
 ---
 
+## **Testing Instructions**
+
+### Run Unit Tests Locally:
+Install `pytest` and run tests:
+```
+
+pytest tests/ --maxfail=5 --disable-warnings -v
+
+```
+
+### Continuous Integration with GitHub Actions:
+- Automated testing is configured in `.github/workflows/tests.yml`.
+- Tests are triggered on every push or pull request targeting the `main` branch.
+
+---
+
 ## **API Documentation**
 
-### Endpoint: `/retrieve_similar_companies/{company_id}`
+### Endpoint: `/api/retrieve_similar_companies/{company_id}`
 #### Request:
 - Method: `GET`
 - URL Parameter: `company_id` (integer)
@@ -143,30 +181,36 @@ project/
 
 ---
 
-## **Testing Instructions**
-Run unit tests using Pytest:
-```
+## **GitHub Actions Workflow**
 
-pytest tests/
+The CI pipeline runs tests automatically using GitHub Actions.
 
-```
+#### Workflow File: `.github/workflows/tests.yml`
 
+![CI Pipeline](screenshots/ci_pipeline.png)
+
+## Screenshots
+
+### API Response Example
+![API Success Screenshot](screenshots/api_success.png)
+---
+![API Failure Screenshot](screenshots/api_failure.png)
 ---
 
-## **Performance Optimization**
-
-1. Add vector index for faster similarity search:
-```
-
-CREATE INDEX ON companies USING hnsw (embedding vector_cosine_ops);
-
-```
-2. Use connection pooling for production deployments.
+### Project Structure
+![Google Cloud Setup](screenshots/gcloud.png)
 
 ---
 
 ## **Future Improvements**
 1. Add filtering capabilities (e.g., filter by industry or location).
-2. Implement caching for frequently queried companies.
+2. Implement caching invalidation strategies for dynamic data updates.
 3. Scale PostgreSQL horizontally using partitioning or sharding.
+4. Add monitoring with grafana or new relic
+5. Env variables management
+6. Logger implementation
+7. Security measurements
+8. IaaC for Google cloud, for ex: terraform
+
+---
 
